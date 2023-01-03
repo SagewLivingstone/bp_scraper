@@ -1,6 +1,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
 """
 Class for scraping occupancy data from a rockgympro iframe
@@ -39,14 +40,27 @@ class OccupancyScraper:
             return
 
         self.data = {
+            'location': self.location,
             'capacity': match_data.group(1),
             'count': match_data.group(2),
-            'last_updated_string': match_data.group(3)
+            'last_updated': self.str_to_datetime(match_data.group(3))
         }
+    
+    def str_to_datetime(self, str):
+        if str is None:
+            return None
+        
+        groups = re.split(':| ', str)
+        date = datetime.today().replace(hour=int(groups[0]) % 12,
+                                        minute=int(groups[1]))
+        if groups[2] == 'PM':
+            date += timedelta(hours=12)
+
+        return date
 
     def print_data(self):
         if self.data is None:
             return
         
-        print(self.location, ':', self.data['count'], '/', self.data['capacity'], '- Last Updated:', self.data['last_updated_string'])
+        print(self.location, ':', self.data['count'], '/', self.data['capacity'], '- Last Updated:', self.data['last_updated'])
         
